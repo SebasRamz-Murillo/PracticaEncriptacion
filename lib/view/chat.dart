@@ -22,7 +22,11 @@ class ChatScreen extends StatefulWidget {
 
 class ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
+  final TextEditingController _ctrlSala = TextEditingController();
+  final TextEditingController _ctrlContra = TextEditingController();
   final List<ChatMessage> _messages = <ChatMessage>[];
+  bool autorizado = false;
+  bool autorizando = false;
 
   void _handleSubmitted(String text) {
     _textController.clear();
@@ -35,11 +39,13 @@ class ChatScreenState extends State<ChatScreen> {
       text: encriptado,
       hash: desencriptado,
       isSentByMe: true,
+      autorizado: autorizado,
     );
     ChatMessage message2 = ChatMessage(
       text: encriptado,
       hash: desencriptado,
       isSentByMe: false,
+      autorizado: autorizado,
     );
 
     setState(() {
@@ -48,74 +54,135 @@ class ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _handleAuth(String sala, String contra, String hashReal) {
+    String contraHash;
+    String provicionalHash;
+    provicionalHash = encriptar(hashReal);
+    contraHash = encriptar(contra);
+    setState(() {
+      if (provicionalHash == contraHash) {
+        autorizado = true;
+      } else {
+        autorizado = false;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat encriptado'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.verified_user),
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) => AlertDialog(
-                        title: const Text('Iniciar sesion'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            TextField(
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: 'Usuario',
+        appBar: AppBar(
+          title: const Text('Chat encriptado'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: () {
+                autorizado = false;
+                _messages.forEach((element) {
+                  element.autorizado = false;
+                });
+                autorizando = false;
+                setState(() {});
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.verified_user),
+              onPressed: () {
+                setState(() {
+                  autorizando = true;
+                });
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                          title: const Text('Iniciar sesion'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: _ctrlSala,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Sala',
+                                ),
                               ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: _ctrlContra,
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Contraseña',
+                                ),
+                              ),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                _ctrlContra.clear();
+                                _ctrlSala.clear();
+                                setState(() {
+                                  autorizando = false;
+                                });
+
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Cancelar'),
                             ),
-                            SizedBox(height: 10),
-                            TextField(
-                              obscureText: true,
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                labelText: 'Contraseña',
-                              ),
+                            TextButton(
+                              onPressed: () {
+                                _handleAuth(
+                                    "1", _ctrlContra.text, _ctrlContra.text);
+                                if (autorizado) {
+                                  _messages.forEach((element) {
+                                    element.autorizado = true;
+                                  });
+                                }
+                                _ctrlContra.clear();
+                                _ctrlSala.clear();
+
+                                setState(() {
+                                  autorizando = false;
+                                });
+
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Iniciar sesion'),
                             ),
                           ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Cancelar'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Iniciar sesion'),
-                          ),
-                        ],
-                      ));
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: <Widget>[
-          Flexible(
-            child: ListView.builder(
-              reverse: true,
-              itemCount: _messages.length,
-              itemBuilder: (_, int index) => _messages[index],
+                        ));
+              },
             ),
-          ),
-          const Divider(height: 1.0),
-          Container(
-            decoration: BoxDecoration(color: Theme.of(context).cardColor),
-            child: _buildTextComposer(),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+        body: !autorizando
+            ? Column(
+                children: <Widget>[
+                  Flexible(
+                    child: ListView.builder(
+                      reverse: true,
+                      itemCount: _messages.length,
+                      itemBuilder: (_, int index) => _messages[index],
+                    ),
+                  ),
+                  const Divider(height: 1.0),
+                  Container(
+                    decoration:
+                        BoxDecoration(color: Theme.of(context).cardColor),
+                    child: _buildTextComposer(),
+                  ),
+                ],
+              )
+            : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 10),
+                    Text('Autorizando...'),
+                  ],
+                ),
+              ));
   }
 
   Widget _buildTextComposer() {
@@ -149,12 +216,16 @@ class ChatScreenState extends State<ChatScreen> {
 
 class ChatMessage extends StatelessWidget {
   ChatMessage(
-      {required this.text, required this.hash, required this.isSentByMe});
+      {required this.text,
+      required this.hash,
+      required this.isSentByMe,
+      this.autorizado = false});
 
   final String text;
   final String hash;
   String hora = "";
   DateTime now = DateTime.now();
+  bool autorizado;
 
   final bool isSentByMe;
 
@@ -185,31 +256,39 @@ class ChatMessage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          isSentByMe ? 'Tú' : 'Otro Usuario',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(hora)
-                      ],
+                    Container(
+                      width: 200.0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            isSentByMe ? 'Tú' : 'Otro Usuario',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(hora)
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 5.0),
-                          child: Text(text,
-                              style: const TextStyle(
-                                  color: Colors.grey, fontSize: 8)),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 5.0),
-                          child: Text(hash),
-                        ),
-                      ],
-                    )
+                    autorizado
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.only(top: 5.0),
+                                child: Text(text,
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 8)),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(top: 5.0),
+                                child: Text(hash),
+                              ),
+                            ],
+                          )
+                        : Container(
+                            margin: const EdgeInsets.only(top: 5.0),
+                            child: Text(text),
+                          ),
                   ],
                 ),
               ),

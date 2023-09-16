@@ -9,13 +9,11 @@ String encriptar(String contra) {
   final hashBytes =
       sha256.convert(claveBytes).bytes; // Generar el hash utilizando SHA-256
   final hash = base64.encode(hashBytes);
-
   return hash;
 }
 
 bool verificarContra(String contra, String hashAlmacenado) {
   final hashIngresado = encriptar(contra);
-
   return hashIngresado == hashAlmacenado;
 }
 
@@ -23,9 +21,7 @@ String mensajeEncriptado(String text, String key) {
   if (key.length < 32) {
     key = key.padRight(32, "0");
   }
-
   final keya = Key.fromUtf8(key);
-
   final iv = IV.fromLength(1);
   final encrypter = Encrypter(AES(keya));
 
