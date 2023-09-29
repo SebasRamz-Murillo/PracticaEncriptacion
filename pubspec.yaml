@@ -13,12 +13,16 @@ dependencies:
     sdk: flutter
 
 
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.6
   crypto: ^3.0.3
   pointycastle: ^3.7.3
   collection: ^1.17.0
   convert: ^3.1.1
   encrypt: ^5.0.1
+  socket_io_client: ^2.0.3+1
+  provider: ^6.0.5
+  awesome: ^0.0.3
+  draggable_bottom_sheet: ^1.0.2
 
 dev_dependencies:
   flutter_test:

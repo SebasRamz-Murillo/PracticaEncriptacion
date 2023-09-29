@@ -21,8 +21,13 @@ String mensajeEncriptado(String text, String key) {
   if (key.length < 32) {
     key = key.padRight(32, "0");
   }
+  if (text.length > 32) {
+    key = key.substring(0, 32);
+  }
+
   final keya = Key.fromUtf8(key);
-  final iv = IV.fromLength(1);
+  final iv = IV
+      .fromLength(16); // GENERA EL IV DE 16 BYTES A PARTIR DEL HASH DEL SHA256
   final encrypter = Encrypter(AES(keya));
 
   final encrypted = encrypter.encrypt(text, iv: iv);
