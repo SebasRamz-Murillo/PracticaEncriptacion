@@ -49,7 +49,12 @@ class ChatScreenState extends State<ChatScreen> {
     salaActual = Sala(nombre, password);
     socket.connectToServerChat(nombre, (p0) {
       _handleRecibir(p0);
+      cargaMensajes();
     });
+  }
+
+  void cargaMensajes() {
+    setState(() {});
   }
 
   void _handleSubmitted(String text) {
@@ -66,7 +71,7 @@ class ChatScreenState extends State<ChatScreen> {
       autorizado: autorizado,
     );
     Sala mensaje = Sala(encriptado, nombre);
-    socket.mensaje(mensaje.toJson().toString(), (p0) {
+    socket.mensaje(encriptado, (p0) {
       print(p0);
     });
 
@@ -93,9 +98,9 @@ class ChatScreenState extends State<ChatScreen> {
       autorizado: autorizado,
     );
 
-    setState(() {
-      _messages.insert(0, message);
-    });
+    _messages.insert(0, message);
+
+    //print(_messages.length);
   }
 
   void _handleAuth(String sala, String contra, String hashReal) {
@@ -130,7 +135,7 @@ class ChatScreenState extends State<ChatScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text('Chat encriptado ${nombre}',
-              style: TextStyle(fontSize: 20, color: kPrimaryColor)),
+              style: const TextStyle(fontSize: 20, color: kPrimaryColor)),
           backgroundColor: kBackgroundColor,
           actions: [
             autorizado
