@@ -1,7 +1,7 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SOCKET {
-  final socket = IO.io("http://localhost:3333", <String, dynamic>{
+  final socket = IO.io("http://192.168.252.112:3333", <String, dynamic>{
     //final socket = IO.io("http://192.168.255.42:3333", <String, dynamic>{
     'transports': ['websocket'],
     'autoConnect': true, // Puedes configurar esto según tus necesidades
